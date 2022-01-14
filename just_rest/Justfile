@@ -1,0 +1,54 @@
+# vim: filetype=bash
+
+BASE_URL := 'https://localhost:6001/'
+STAGING_SERVER_01_BASE_URL := 'https://server-name/base/api/'
+STAGING_BASE_URL := 'https://subdomain.domain.com/base/api/'
+
+get-auth-token:
+  atoken=`curl -Lk 'https://subdomain.authserver.com/auth/connect/token' --data-raw 'client_id=client1&client_secret=secret&grant_type=client_credentials' --compressed | sed -E 's/.*access_token\":\"([^,\"]*?)\",.*/\1/g'`; echo "$atoken";
+
+post DATA AUTH ENDPOINT QUERY_PARAMS='' FILETYPE='json' CONTENT_TYPE='application/json':
+  #!/usr/bin/env bash
+  set -euo pipefail
+  . ./rest.bash;
+  query_params='{{QUERY_PARAMS}}';
+  [[ -e "$query_params" ]] && { query_params=`cat "$query_params"`; }
+  [[ ! "$query_params" == "?"* ]] && { query_params=`echo "${query_params:+"?$query_params"}"`; }
+  url="{{BASE_URL}}{{ENDPOINT}}$query_params";
+  rest_post "$url" '{{DATA}}' '' '{{AUTH}}' '{{FILETYPE}}' '{{CONTENT_TYPE}}' "-H 'userId: 1'" '';
+
+put DATA AUTH ENDPOINT QUERY_PARAMS='' FILETYPE='json' CONTENT_TYPE='application/json':
+  #!/usr/bin/env bash
+  set -euo pipefail
+  . ./rest.bash;
+  query_params='{{QUERY_PARAMS}}';
+  [[ -e "$query_params" ]] && { query_params=`cat "$query_params"`; }
+  [[ ! "$query_params" == "?"* ]] && { query_params=`echo "${query_params:+"?$query_params"}"`; }
+  url="{{BASE_URL}}{{ENDPOINT}}$query_params";
+  rest_put "$url" '{{DATA}}' '' '{{AUTH}}' '{{FILETYPE}}' '{{CONTENT_TYPE}}' "-H 'userId: 1'" '';
+
+get AUTH ENDPOINT QUERY_PARAMS='' FILETYPE='json':
+  #!/usr/bin/env bash
+  set -euo pipefail
+  . ./rest.bash;
+  query_params='{{QUERY_PARAMS}}';
+  [[ -e "$query_params" ]] && { query_params=`cat "$query_params"`; }
+  [[ ! "$query_params" == "?"* ]] && { query_params=`echo "${query_params:+"?$query_params"}"`; }
+  url="{{BASE_URL}}{{ENDPOINT}}$query_params";
+  rest_get "$url" '' '' '{{AUTH}}' '{{FILETYPE}}' '' "-H 'userId: 1'" '';
+
+get-items-search QUERY_PARAMS='':
+  just get "`just get-auth-token`" "items/search" "{{QUERY_PARAMS}}"
+
+get-items:
+  just get "`just get-auth-token`" "items"
+
+post-items DATA:
+  just post "{{DATA}}" "`just get-auth-token`" "items"
+
+put-items DATA:
+  just put "{{DATA}}" "`just get-auth-token`" "items"
+
+put-item-status ID STATUS:
+  just put "" "`just get-auth-token`" "item/{{ID}}/{{STATUS}}"
+
