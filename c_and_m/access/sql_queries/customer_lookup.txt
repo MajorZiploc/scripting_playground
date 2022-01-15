@@ -13,6 +13,5 @@ AND
 )
 AND
 ((Customer.[Company Name]) LIKE '*')
-)
 ORDER BY Customer.[First Name], Customer.[Last Name]
 ;

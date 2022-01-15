@@ -2,6 +2,7 @@
 
 . ~/.bashrc;
 
+cd ~/projects;
 echo "project,found_in,search_command"
 for proj in `find . -mindepth 1 -maxdepth 1 -type d`; do
   cd "$proj";
